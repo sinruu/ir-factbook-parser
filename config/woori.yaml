@@ -1,0 +1,282 @@
+# 우리금융지주 FactBook 파싱 규칙
+
+company:
+  name: "우리금융지주"
+  name_en: "Woori Financial Group"
+  code: "woori"
+
+file_patterns:
+  - "*woori*.xlsx"
+  - "*우리*.xlsx"
+  - "202510300310445000.xlsx"  # 실제 파일명 패턴
+
+# =============================================================================
+# 시트별 파싱 규칙
+# =============================================================================
+
+sheets:
+  # ----- Financial Highlights -----
+  Financial Highlights:
+    entity: "지주"
+    category: "Financial Highlights"
+    structure:
+      header_row: 3          # 0-indexed, 기간 헤더가 있는 행
+      data_start_row: 6      # 실제 데이터 시작 행
+      metric_columns: [3, 4, 5, 6]  # 지표명이 있는 열 (계층적)
+      data_start_col: 7      # 데이터 시작 열
+      unit_hint_row: 5       # 단위 힌트가 있는 행
+      unit_hint_col: 36      # "(Unit : KRW in billion)"
+    period_format: "FY{year} {quarter}Q"  # FY2024 3Q
+    default_unit: "KRW_billion"
+
+  # ----- Income Statement (Group) -----
+  IS:
+    entity: "지주"
+    category: "Income Statement"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5, 6, 7, 8, 9]
+      data_start_col: 12
+      has_annual_columns: true  # FY2023 같은 연간 컬럼 포함
+    period_format: "FY{year} {quarter}Q"
+    default_unit: "KRW_billion"
+    special_handling:
+      # 연간/분기 컬럼 구분 (FY2023 vs FY2023 1Q)
+      annual_pattern: "^FY\\d{4}$"
+      quarterly_pattern: "FY\\d{4} \\dQ"
+
+  # ----- Balance Sheet (Group) -----
+  BS:
+    entity: "지주"
+    category: "Balance Sheet"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5, 6]
+      data_start_col: 7
+    period_format: "FY{year} {quarter}Q"
+    default_unit: "KRW_billion"
+
+  # ----- NIM (Bank + Card) -----
+  "NIM_Bank + Card":
+    entity: "은행+카드"
+    category: "Interest Income"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "percent"
+    metrics_override:
+      - original: "NIM"
+        unit: "percent"
+      - original: "NIS"
+        unit: "percent"
+
+  # ----- NIM NIS (Bank Only) -----
+  "NIM NIS_Bank":
+    entity: "은행"
+    category: "Interest Income"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "percent"
+
+  # ----- Non-Interest Income -----
+  Non-Interest Income:
+    entity: "지주"
+    category: "Non-Interest Income"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5, 6]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  # ----- SG&A Expense -----
+  SG&A Expense:
+    entity: "지주"
+    category: "G&A Expense"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "KRW_billion"
+
+  # ----- Loans (Bank) -----
+  Loans_Bank:
+    entity: "은행"
+    category: "Loans"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5, 6, 7]  # Total Credit > Corporate > Large Corporate 계층
+      data_start_col: 8
+    default_unit: "KRW_billion"
+    hierarchical_metrics:
+      - level_0: "Total Credit"
+        level_1: ["Corporate", "Household", "Public & Others"]
+        level_2:
+          Corporate: ["Large Corporate", "SME", "SOHO"]
+
+  # ----- Funding (Bank) -----
+  "Funding_Bank ":
+    entity: "은행"
+    category: "Deposits"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "KRW_billion"
+
+  # ----- Asset Quality (Group) -----
+  Asset Quality_Group:
+    entity: "지주"
+    category: "Asset Quality"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+    metrics_override:
+      - original: "NPL Ratio"
+        unit: "percent"
+      - original: "Precautionary & Below"
+        unit: "percent"
+
+  # ----- Asset Quality (Bank) -----
+  Asset Quality_Bank:
+    entity: "은행"
+    category: "Asset Quality"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  # ----- Provision (Bank) -----
+  "Provision_Bank ":
+    entity: "은행"
+    category: "Provision"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "KRW_billion"
+
+  # ----- Delinquency (Bank) -----
+  Delinquency_Bank:
+    entity: "은행"
+    category: "Delinquency"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "percent"
+
+  # ----- Capital Adequacy (Group) -----
+  Capital Adequacy_Group:
+    entity: "지주"
+    category: "Capital Adequacy"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "percent"
+
+  # ----- Capital Adequacy (Bank) -----
+  Capital Adequacy_Bank:
+    entity: "은행"
+    category: "Capital Adequacy"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "percent"
+
+  # ----- Subsidiaries -----
+  Tongyang Life Insurance:
+    entity: "생명보험"
+    category: "Subsidiary"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "KRW_billion"
+
+  Woori Card:
+    entity: "카드"
+    category: "Subsidiary"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "KRW_billion"
+
+  Woori Financial Capital:
+    entity: "캐피탈"
+    category: "Subsidiary"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "KRW_billion"
+
+  Woori Investment Securities:
+    entity: "증권"
+    category: "Subsidiary"
+    structure:
+      header_row: 3
+      data_start_row: 6
+      metric_columns: [3, 4, 5]
+      data_start_col: 6
+    default_unit: "KRW_billion"
+
+# =============================================================================
+# 제외할 시트
+# =============================================================================
+
+skip_sheets:
+  - "Table of Contents"
+  - "Disclaimer"
+  - "Organization Structure"
+  - "Credit Rating"
+  - "HFG BS"  # 다른 회사 BS 같음 (오류로 보임)
+  - "KHB BS"
+
+# =============================================================================
+# 특수 처리 규칙
+# =============================================================================
+
+special_rules:
+  # QoQ, YoY 컬럼 처리
+  calculated_columns:
+    - name: "QoQ"
+      type: "growth_rate"
+      skip: true  # 원본 데이터만 추출, 계산값은 제외
+    - name: "YoY"
+      type: "growth_rate"
+      skip: true
+
+  # 빈 셀 처리
+  empty_cell_handling: "skip"  # skip | zero | null
+
+  # 숫자 변환
+  number_parsing:
+    decimal_separator: "."
+    thousands_separator: ","
+    negative_format: ["()", "-"]  # (100) 또는 -100

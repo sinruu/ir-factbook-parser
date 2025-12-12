@@ -1,0 +1,398 @@
+# 공통 정규화 스키마 (schema.yaml)
+# 4대 금융지주 IR FactBook 데이터를 통합하기 위한 표준 스키마
+
+# =============================================================================
+# 출력 스키마 정의
+# =============================================================================
+
+output_schema:
+  fields:
+    - name: holding_company
+      type: string
+      description: "금융지주사명"
+      enum: ["우리금융지주", "KB금융지주", "신한금융지주", "하나금융지주"]
+      
+    - name: entity
+      type: string
+      description: "법인/자회사 (지주, 은행, 카드, 증권 등)"
+      examples: ["지주", "은행", "카드", "증권", "캐피탈", "생명보험"]
+      
+    - name: category
+      type: string
+      description: "지표 대분류"
+      enum:
+        - "Financial Highlights"
+        - "Income Statement"
+        - "Balance Sheet"
+        - "Interest Income"
+        - "Non-Interest Income"
+        - "Asset Quality"
+        - "Capital Adequacy"
+        - "Loans"
+        - "Deposits"
+        - "Provision"
+        - "Delinquency"
+        - "G&A Expense"
+        
+    - name: metric_std
+      type: string
+      description: "표준화된 지표명 (영문)"
+      
+    - name: metric_original
+      type: string
+      description: "원본 지표명 (회사별 표현 그대로)"
+      
+    - name: period
+      type: string
+      description: "기간 (YYYY-QN 형식으로 통일)"
+      pattern: "^\\d{4}-Q[1-4]$|^\\d{4}-FY$"
+      examples: ["2024-Q3", "2024-FY"]
+      
+    - name: value
+      type: float
+      description: "수치 값"
+      nullable: true
+      
+    - name: unit
+      type: string
+      description: "단위"
+      enum: ["KRW_billion", "KRW_trillion", "percent", "bps", "ratio", "won", "count"]
+      
+    - name: is_cumulative
+      type: boolean
+      description: "누적 여부 (1Q~3Q 합계인지 단일 분기인지)"
+      default: false
+
+# =============================================================================
+# 표준 지표 매핑 테이블
+# =============================================================================
+
+metric_mappings:
+  # ----- Financial Highlights -----
+  total_assets:
+    category: "Balance Sheet"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Total Assets"
+      KB금융: "Total Assets"
+      신한금융: "Total Assets"
+      하나금융: "Total Assets"
+      
+  total_equity:
+    category: "Balance Sheet"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Total Equity"
+      KB금융: "Total Equity"
+      신한금융: "Shareholders' equity (controlling interest)"
+      하나금융: "Total Equity"
+      
+  net_income:
+    category: "Income Statement"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Net Income"
+      KB금융: "Net Income"
+      신한금융: "Net Income (Accumulated)"
+      하나금융: "Net Income"
+      
+  net_income_controlling:
+    category: "Income Statement"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Net Income (Controlling Interest)"
+      KB금융: "Net Income (attributable to controlling interests)"
+      신한금융: "Net income attributable to controlling interest"
+      하나금융: "Net Income (Controlling Interest)"
+
+  # ----- Interest Income -----
+  net_interest_income:
+    category: "Interest Income"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Interest Income"
+      KB금융: "Net interest income"
+      신한금융: "Interest Income (b)"
+      하나금융: "Net Interest Income"
+      
+  interest_revenue:
+    category: "Interest Income"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Interest Revenue"
+      KB금융: "Interest income"
+      신한금융: "Interest revenue"
+      하나금융: "Interest Revenue"
+      
+  interest_expense:
+    category: "Interest Income"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Interest Expense"
+      KB금융: "Interest expense"
+      신한금융: "Interest expense"
+      하나금융: "Interest Expense"
+
+  # ----- NIM -----
+  nim:
+    category: "Interest Income"
+    unit: "percent"
+    mappings:
+      우리금융: "NIM"
+      KB금융: "NIM"
+      신한금융: "NIM"
+      하나금융: "NIM"
+      
+  nis:
+    category: "Interest Income"
+    unit: "percent"
+    mappings:
+      우리금융: "NIS"
+      KB금융: "NIS"
+      신한금융: "NIS"
+      하나금융: "NIS"
+
+  # ----- Non-Interest Income -----
+  non_interest_income:
+    category: "Non-Interest Income"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Non-Interest Income"
+      KB금융: "Net other operating income(expenses)"
+      신한금융: "Non-interest income (c)"
+      하나금융: "Non-Interest Income"
+      
+  fee_income:
+    category: "Non-Interest Income"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Fee Income"
+      KB금융: "Net fee and commission income"
+      신한금융: "Fee & commission income"
+      하나금융: "Fee Income*"
+
+  # ----- G&A Expense -----
+  sga_expense:
+    category: "G&A Expense"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "SG&A Expense"
+      KB금융: "General & administrative expenses"
+      신한금융: "General and Admin Expenses (d)"
+      하나금융: "G&A Expense"
+
+  # ----- Provision -----
+  provision_credit_loss:
+    category: "Provision"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Credit Cost"
+      KB금융: "Provision for credit losses"
+      신한금융: "Provision for credit losses (h)"
+      하나금융: "Credit Loss Provision"
+
+  # ----- Asset Quality -----
+  total_credit:
+    category: "Asset Quality"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Total Credit *"
+      KB금융: "Total Outstanding Credits"
+      신한금융: "Total"
+      하나금융: "Total Credit*"
+      
+  npl:
+    category: "Asset Quality"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "NPL**"
+      KB금융: "NPL (A)"
+      신한금융: "Substandard & below"  # 고정이하여신
+      하나금융: "NPL"
+      
+  npl_ratio:
+    category: "Asset Quality"
+    unit: "percent"
+    mappings:
+      우리금융: "NPL Ratio"
+      KB금융: "NPL Ratio"
+      신한금융: "Bad loan ratio"
+      하나금융: "NPL ratio"
+      
+  substandard_and_below_ratio:
+    category: "Asset Quality"
+    unit: "percent"
+    mappings:
+      우리금융: "Precautionary & Below Ratio"
+      KB금융: "Precautionary & Below Ratio"
+      신한금융: "Precautionary & below ratio"
+      하나금융: "Precautionary & below ratio"
+
+  # ----- Capital Adequacy -----
+  bis_ratio:
+    category: "Capital Adequacy"
+    unit: "percent"
+    mappings:
+      우리금융: "BIS Ratio"
+      KB금융: "BIS Ratio"
+      신한금융: "BIS capital ratio(SFG)*"
+      하나금융: "BIS Ratio"
+      
+  tier1_ratio:
+    category: "Capital Adequacy"
+    unit: "percent"
+    mappings:
+      우리금융: "Tier 1 Ratio"
+      KB금융: "Tier 1 Capital Ratio"
+      신한금융: "(TierⅠ ratio)*"
+      하나금융: "Tier1 Ratio"
+      
+  cet1_ratio:
+    category: "Capital Adequacy"
+    unit: "percent"
+    mappings:
+      우리금융: "CET1 Ratio"
+      KB금융: "CET1 Ratio"
+      신한금융: "(Common Equity Tier Ⅰ Ratio)*"
+      하나금융: "CET1 Ratio"
+
+  # ----- Loans -----
+  total_loans:
+    category: "Loans"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Total Credit"
+      KB금융: "Total loans"
+      신한금융: "Total Loans"
+      하나금융: "Total Loans"
+      
+  corporate_loans:
+    category: "Loans"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Corporate"
+      KB금융: "Corporate"
+      신한금융: "Corporate"
+      하나금융: "Corporate"
+      
+  household_loans:
+    category: "Loans"
+    unit: "KRW_billion"
+    mappings:
+      우리금융: "Household"
+      KB금융: "Retail"
+      신한금융: "Household"
+      하나금융: "Household"
+
+  # ----- Profitability Ratios -----
+  roe:
+    category: "Financial Highlights"
+    unit: "percent"
+    mappings:
+      우리금융: "ROE"
+      KB금융: "ROE"
+      신한금융: "ROE"
+      하나금융: "ROE (Consolidated)"
+      
+  roa:
+    category: "Financial Highlights"
+    unit: "percent"
+    mappings:
+      우리금융: "ROA"
+      KB금융: "ROA"
+      신한금융: "ROA"
+      하나금융: "ROA (Consolidated)"
+
+# =============================================================================
+# 기간 형식 변환 규칙
+# =============================================================================
+
+period_formats:
+  # 입력 형식 -> 출력 형식 (YYYY-QN)
+  patterns:
+    - input: "FY(\\d{4}) (\\d)Q"        # FY2024 3Q -> 2024-Q3
+      output: "{0}-Q{1}"
+      
+    - input: "(\\d)Q(\\d{2})"            # 3Q24 -> 2024-Q3
+      output: "20{1}-Q{0}"
+      
+    - input: "(\\d{4})\\.(\\d{2})"       # 2024.09 -> 2024-Q3
+      output: "{0}-Q{quarter_from_month}"
+      
+    - input: "'(\\d{2})\\.(\\d{1,2})"    # '24.9 -> 2024-Q3
+      output: "20{0}-Q{quarter_from_month}"
+      
+    - input: "FY(\\d{4})"                # FY2024 -> 2024-FY
+      output: "{0}-FY"
+      
+    - input: "(\\d)Q(\\d{2})\\(E\\)"     # 3Q25(E) -> 2025-Q3 (Estimate)
+      output: "20{1}-Q{0}"
+      is_estimate: true
+
+  month_to_quarter:
+    "01": "Q1"
+    "02": "Q1"
+    "03": "Q1"
+    "04": "Q2"
+    "05": "Q2"
+    "06": "Q2"
+    "07": "Q3"
+    "08": "Q3"
+    "09": "Q3"
+    "10": "Q4"
+    "11": "Q4"
+    "12": "Q4"
+
+# =============================================================================
+# 단위 변환 규칙
+# =============================================================================
+
+unit_detection:
+  patterns:
+    - pattern: "KRW in billion|bn Won|Wbn|십억원"
+      unit: "KRW_billion"
+      
+    - pattern: "KRW in trillion|조원"
+      unit: "KRW_trillion"
+      
+    - pattern: "%|percent|비율"
+      unit: "percent"
+      
+    - pattern: "bps|bp"
+      unit: "bps"
+      
+    - pattern: "Won|원"
+      unit: "won"
+      
+    - pattern: "명|인|employees"
+      unit: "count"
+
+# =============================================================================
+# 데이터 검증 규칙
+# =============================================================================
+
+validation_rules:
+  # 값 범위 검증
+  range_checks:
+    total_assets:
+      min: 0
+      max: 2000000  # 2000조원 (billion 단위)
+      
+    npl_ratio:
+      min: 0
+      max: 0.2  # 20%
+      
+    bis_ratio:
+      min: 0.05
+      max: 0.3  # 5% ~ 30%
+      
+    nim:
+      min: 0
+      max: 0.1  # 10%
+
+  # 필수 지표 (각 회사별로 반드시 있어야 하는 지표)
+  required_metrics:
+    - total_assets
+    - net_income
+    - npl_ratio
+    - bis_ratio

@@ -1,0 +1,277 @@
+# 하나금융지주 IR Databook 파싱 규칙
+
+company:
+  name: "하나금융지주"
+  name_en: "Hana Financial Group"
+  code: "hana"
+
+file_patterns:
+  - "*HFG*Databook*.xlsx"
+  - "*하나*.xlsx"
+  - "HFG_IR_Databook_3Q25.xlsx"
+
+# =============================================================================
+# 시트별 파싱 규칙
+# =============================================================================
+# 하나는 시트명 접미사로 엔티티 구분:
+# _G = Group (지주)
+# _Hana Bank = Bank (은행)
+# 없으면 기본적으로 Group
+
+sheets:
+  # ----- Financial Highlights -----
+  Financial Highlights:
+    entity: "지주"
+    category: "Financial Highlights"
+    structure:
+      header_row: 3          # 0-indexed
+      data_start_row: 5
+      metric_columns: [3]    # 단일 열
+      data_start_col: 7
+      unit_hint_row: 4
+      unit_hint_col: 47      # "(Unit : KRW in billion)"
+    period_format: "FY{year} {quarter}Q"  # FY2024 3Q
+    default_unit: "KRW_billion"
+
+  # ----- Income Statement (Group) -----
+  IS:
+    entity: "지주"
+    category: "Income Statement"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+      has_annual_columns: true  # FY2024 같은 연간 컬럼
+    period_format: "FY{year} {quarter}Q"
+    default_unit: "KRW_billion"
+
+  # ----- Balance Sheet (Group) -----
+  BS:
+    entity: "지주"
+    category: "Balance Sheet"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  # ----- NIM NIS (Group) -----
+  NIM NIS_G:
+    entity: "지주"
+    category: "Interest Income"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "percent"
+
+  # ----- NIM NIS (Bank) -----
+  "NIM NIS_Hana Bank":
+    entity: "은행"
+    category: "Interest Income"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "percent"
+
+  # ----- Non-Interest Income -----
+  "Non Int.":
+    entity: "지주"
+    category: "Non-Interest Income"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  # ----- G&A Expense -----
+  G&A Expense:
+    entity: "지주"
+    category: "G&A Expense"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  # ----- Loans & Deposits (Bank) -----
+  "Loan&Dep_Hana Bank":
+    entity: "은행"
+    category: "Loans"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3, 4]  # 계층적
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  # ----- Asset Quality (Group) -----
+  Asset Quality_G:
+    entity: "지주"
+    category: "Asset Quality"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+    metrics_override:
+      - original: "NPL ratio"
+        unit: "percent"
+      - original: "Precautionary & below ratio"
+        unit: "percent"
+
+  # ----- Asset Quality (Bank) -----
+  "Asset Quality_Hana Bank":
+    entity: "은행"
+    category: "Asset Quality"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  # ----- Credits (Bank) -----
+  "Credits_Hana Bank":
+    entity: "은행"
+    category: "Loans"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3, 4]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  # ----- Delinquency (Bank) -----
+  "Delinquency_Hana Bank":
+    entity: "은행"
+    category: "Delinquency"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "percent"
+
+  # ----- Provision (Bank) -----
+  "Provision_Hana Bank":
+    entity: "은행"
+    category: "Provision"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  # ----- Capital Adequacy -----
+  Capital Adequacy:
+    entity: "지주"
+    category: "Capital Adequacy"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "percent"
+
+  # ----- Securities (Bank) -----
+  "Securities_Hana Bank":
+    entity: "은행"
+    category: "Balance Sheet"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  # ===== Subsidiaries =====
+  Hana Securities:
+    entity: "증권"
+    category: "Subsidiary"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  Hana Card:
+    entity: "카드"
+    category: "Subsidiary"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  Hana Capital:
+    entity: "캐피탈"
+    category: "Subsidiary"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+  Other Subsidiaries:
+    entity: "기타자회사"
+    category: "Subsidiary"
+    structure:
+      header_row: 3
+      data_start_row: 5
+      metric_columns: [3]
+      data_start_col: 7
+    default_unit: "KRW_billion"
+
+# =============================================================================
+# 제외할 시트
+# =============================================================================
+
+skip_sheets:
+  - "Table of Contents"
+  - "Organizational Chart"
+  - "Credit Rating"
+  - "HFG BS"
+  - "KHB BS"
+
+# =============================================================================
+# 특수 처리 규칙
+# =============================================================================
+
+special_rules:
+  # 기간 형식 (우리금융과 동일)
+  period_formats:
+    - pattern: "FY(\\d{4}) (\\d)Q"    # FY2024 3Q
+      output: "{0}-Q{1}"
+    - pattern: "FY(\\d{4})"           # FY2024
+      output: "{0}-FY"
+
+  # YoY, QoQ 컬럼
+  calculated_columns:
+    - name: "YoY"
+      skip: true
+    - name: "QoQ"
+      skip: true
+
+  # 연간 컬럼 구분
+  annual_column_pattern: "^FY\\d{4}$"
+  quarterly_column_pattern: "FY\\d{4} \\dQ"
+
+  empty_cell_handling: "skip"
+  
+  number_parsing:
+    decimal_separator: "."
+    thousands_separator: ","
+    negative_format: ["-"]

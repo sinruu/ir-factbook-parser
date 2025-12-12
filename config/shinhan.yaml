@@ -1,0 +1,415 @@
+# 신한금융지주 FactBook 파싱 규칙
+
+company:
+  name: "신한금융지주"
+  name_en: "Shinhan Financial Group"
+  code: "shinhan"
+
+file_patterns:
+  - "*SFG*FactBook*.xlsx"
+  - "*신한*.xlsx"
+  - "SFG_FactBook_3Q25.xlsx"
+
+# =============================================================================
+# 시트별 파싱 규칙
+# =============================================================================
+# 신한은 시트명 접미사로 엔티티 구분:
+# _SHB = Shinhan Bank (은행)
+# _Card = Card (카드)
+# 없으면 = Group (지주)
+
+sheets:
+  # ----- Financial Highlights -----
+  Financial Highlights:
+    entity: "지주"
+    category: "Financial Highlights"
+    structure:
+      header_row: 2          # 0-indexed
+      data_start_row: 3
+      metric_columns: [4]    # 단일 열
+      data_start_col: 8
+      unit_hint_row: 2
+      unit_hint_col: 3       # "(Wbn)"
+    period_format: "{quarter}Q{year_short}"  # 3Q25
+    default_unit: "KRW_billion"
+    special_handling:
+      # IFRS-17 이전/이후 컬럼 병존
+      # 예: 1Q22, 1Q22\n(IFRS-17)
+      ifrs17_columns: true
+      ifrs17_pattern: "\\(IFRS-17\\)"
+      prefer_ifrs17: true  # IFRS-17 컬럼 우선 사용
+
+  # ----- Income Statement (Group) -----
+  IS:
+    entity: "지주"
+    category: "Income Statement"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]  # 2단계 계층
+      data_start_col: 8
+    period_format: "{quarter}Q{year_short}"
+    default_unit: "KRW_billion"
+    special_handling:
+      cumulative_data: true  # 데이터가 누적 형태 (1Q, 1H, 3Q, FY)
+      cumulative_pattern: "1H|3Q|FY"
+
+  # ----- Balance Sheet (Group) -----
+  BS:
+    entity: "지주"
+    category: "Balance Sheet"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Income I -----
+  IncomeⅠ:
+    entity: "지주"
+    category: "Interest Income"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Income II -----
+  IncomeⅡ:
+    entity: "지주"
+    category: "Interest Income"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- NIM -----
+  NIM:
+    entity: "지주"
+    category: "Interest Income"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "percent"
+
+  # ----- Non-Interest Income -----
+  Non_interest Income:
+    entity: "지주"
+    category: "Non-Interest Income"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- G&A -----
+  G&A:
+    entity: "지주"
+    category: "G&A Expense"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Asset (Group) -----
+  Asset:
+    entity: "지주"
+    category: "Balance Sheet"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Loan (Group) -----
+  Loan:
+    entity: "지주"
+    category: "Loans"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Deposits -----
+  Depos:
+    entity: "지주"
+    category: "Deposits"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Asset Quality (Group) -----
+  Asset Quality:
+    entity: "지주"
+    category: "Asset Quality"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+    metrics_override:
+      - original: "Bad loan ratio"
+        unit: "percent"
+      - original: "Substandard & below ratio"
+        unit: "percent"
+      - original: "Precautionary & below ratio"
+        unit: "percent"
+
+  # ----- LLP & Write-off -----
+  "LLP_Write-off":
+    entity: "지주"
+    category: "Provision"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Capital Adequacy (Group) -----
+  Capital Adequacy:
+    entity: "지주"
+    category: "Capital Adequacy"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "percent"
+
+  # ----- BIS Capital -----
+  BIS Capital:
+    entity: "지주"
+    category: "Capital Adequacy"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- RWA -----
+  RWA:
+    entity: "지주"
+    category: "Capital Adequacy"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ===== Bank (SHB) Sheets =====
+  IS_SHB:
+    entity: "은행"
+    category: "Income Statement"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  BS_SHB:
+    entity: "은행"
+    category: "Balance Sheet"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  "Interest Income & NIM_SHB":
+    entity: "은행"
+    category: "Interest Income"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  G&A_SHB:
+    entity: "은행"
+    category: "G&A Expense"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  "Loan&Depos_SHB":
+    entity: "은행"
+    category: "Loans"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  Asset Quality_SHB:
+    entity: "은행"
+    category: "Asset Quality"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  DelinquencyⅠ_SHB:
+    entity: "은행"
+    category: "Delinquency"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "percent"
+
+  DelinquencyⅡ_SHB:
+    entity: "은행"
+    category: "Delinquency"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "percent"
+
+  Capital Adequacy_SHB:
+    entity: "은행"
+    category: "Capital Adequacy"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "percent"
+
+  # ===== Card Sheets =====
+  IS_Card:
+    entity: "카드"
+    category: "Income Statement"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  BS_Card:
+    entity: "카드"
+    category: "Balance Sheet"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  Credit Card Assets_Card:
+    entity: "카드"
+    category: "Asset Quality"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  "Delinquency,Allowance_Card":
+    entity: "카드"
+    category: "Delinquency"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "percent"
+
+  # ===== Life Insurance =====
+  Shinhan Life:
+    entity: "생명보험"
+    category: "Subsidiary"
+    structure:
+      header_row: 2
+      data_start_row: 3
+      metric_columns: [3, 4]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+# =============================================================================
+# 제외할 시트
+# =============================================================================
+
+skip_sheets:
+  - "Title"
+  - "Table of Contents"
+  - "Disclaimer"
+  - "Funding_Card"
+  - "BS_Factbook_Card"
+  - "IS_Factbook_Card"
+  - "IS_Reported_Factbook_Card"
+  - "Fin Indicator"
+  - "Corp Information"
+  - "Contact"
+
+# =============================================================================
+# 특수 처리 규칙
+# =============================================================================
+
+special_rules:
+  # 기간 형식 변환
+  period_formats:
+    - pattern: "(\\d)Q(\\d{2})"             # 3Q25
+      output: "20{1}-Q{0}"
+    - pattern: "'(\\d{2})\\.(\\d{1,2})"     # '25.9
+      output: "20{0}-Q{month_to_quarter}"
+    - pattern: "(\\d)H(\\d{2})"             # 1H25 (반기)
+      output: "20{1}-H{0}"
+    - pattern: "FY(\\d{2})"                 # FY25
+      output: "20{0}-FY"
+
+  # IFRS-17 컬럼 처리
+  ifrs17_handling:
+    enabled: true
+    prefer_ifrs17: true
+    marker: "(IFRS-17)"
+    
+  # 누적 데이터 처리
+  cumulative_handling:
+    enabled: true
+    patterns:
+      - "1H"    # 상반기 (1Q + 2Q)
+      - "3Q"    # 3분기 누적 (1Q + 2Q + 3Q)
+      - "FY"    # 연간
+    extract_quarterly: true  # 누적에서 분기 데이터 추출할지
+
+  calculated_columns:
+    skip: true
+    
+  empty_cell_handling: "skip"
+  
+  number_parsing:
+    decimal_separator: "."
+    thousands_separator: ","
