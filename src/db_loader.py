@@ -25,7 +25,6 @@ class FactBookDB:
         """테이블 스키마 초기화"""
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS financial_metrics (
-                id INTEGER PRIMARY KEY,
                 holding_company VARCHAR NOT NULL,
                 entity VARCHAR,
                 category VARCHAR,
@@ -37,8 +36,7 @@ class FactBookDB:
                 value DOUBLE,
                 unit VARCHAR,
                 is_cumulative BOOLEAN DEFAULT FALSE,
-                is_estimate BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                is_estimate BOOLEAN DEFAULT FALSE
             )
         """)
 
