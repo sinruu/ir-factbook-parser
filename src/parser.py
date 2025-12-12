@@ -133,7 +133,7 @@ class FactBookParser:
                     return code
 
         # 키워드 기반 감지
-        if "woori" in filename or "우리" in filename:
+        if "woori" in filename or "우리" in filename or "wfg" in filename:
             return "woori"
         elif "kb" in filename:
             return "kb"
