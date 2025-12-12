@@ -1,0 +1,382 @@
+# KB금융지주 FactBook 파싱 규칙
+
+company:
+  name: "KB금융지주"
+  name_en: "KB Financial Group"
+  code: "kb"
+
+file_patterns:
+  - "*KB*Factbook*.xlsx"
+  - "*KB*factbook*.xlsx"
+  - "2025_3Q_Factbook.xlsx"
+
+# =============================================================================
+# 시트별 파싱 규칙
+# =============================================================================
+# KB는 시트명에 접두사로 엔티티 구분:
+# G_ = Group (지주), B_ = Bank (은행), S_ = Securities (증권)
+# I_ = Insurance (보험), C_ = Card (카드), L_ = Life (생명)
+
+sheets:
+  # ----- Financial Highlights -----
+  Financial Highlights:
+    entity: "지주"
+    category: "Financial Highlights"
+    structure:
+      header_row: 8          # 0-indexed
+      data_start_row: 10
+      metric_columns: [7]    # 단일 열에 지표명
+      data_start_col: 8
+      unit_hint_row: 8
+      unit_hint_col: 7       # "(bn Won)"
+    period_format: "{quarter}Q{year_short}"  # 3Q24
+    default_unit: "KRW_billion"
+
+  # ----- Group Income Statement -----
+  G_IS:
+    entity: "지주"
+    category: "Income Statement"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+      has_annual_columns: true
+    period_format: "{quarter}Q{year_short}"
+    default_unit: "KRW_billion"
+
+  # ----- Group Balance Sheet -----
+  G_BS:
+    entity: "지주"
+    category: "Balance Sheet"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    period_format: "{quarter}Q{year_short}"
+    default_unit: "KRW_billion"
+
+  # ----- Group Interest Income -----
+  G_Interest Income:
+    entity: "지주"
+    category: "Interest Income"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Group Fee Income -----
+  G_Fee:
+    entity: "지주"
+    category: "Non-Interest Income"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Group Other Income -----
+  G_Other:
+    entity: "지주"
+    category: "Non-Interest Income"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Group Provision -----
+  G_Provision:
+    entity: "지주"
+    category: "Provision"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Group G&A -----
+  G_G&A:
+    entity: "지주"
+    category: "G&A Expense"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Group Asset Quality -----
+  G_AQ:
+    entity: "지주"
+    category: "Asset Quality"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+    metrics_override:
+      - original: "NPL Ratio"
+        unit: "percent"
+      - original: "Precautionary & Below Ratio"
+        unit: "percent"
+      - original: "Coverage Ratio"
+        unit: "percent"
+
+  # ----- Group Capital Adequacy -----
+  G_CAR:
+    entity: "지주"
+    category: "Capital Adequacy"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "percent"
+
+  # ----- Bank Income Statement -----
+  B_IS:
+    entity: "은행"
+    category: "Income Statement"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Bank Balance Sheet -----
+  B_BS:
+    entity: "은행"
+    category: "Balance Sheet"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Bank Interest Income -----
+  B_Interest Income:
+    entity: "은행"
+    category: "Interest Income"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+    metrics_override:
+      - original: "NIM"
+        unit: "percent"
+      - original: "NIS"
+        unit: "percent"
+
+  # ----- Bank Fee Income -----
+  B_Fee:
+    entity: "은행"
+    category: "Non-Interest Income"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Bank Loans -----
+  B_Loans:
+    entity: "은행"
+    category: "Loans"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Bank Asset Quality -----
+  B_AQ:
+    entity: "은행"
+    category: "Asset Quality"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Bank Delinquency -----
+  B_Delinquency:
+    entity: "은행"
+    category: "Delinquency"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "percent"
+
+  # ----- Bank Capital Adequacy -----
+  B_CAR:
+    entity: "은행"
+    category: "Capital Adequacy"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "percent"
+
+  # ----- Securities -----
+  S_IS:
+    entity: "증권"
+    category: "Income Statement"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  S_BS:
+    entity: "증권"
+    category: "Balance Sheet"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Insurance -----
+  I_IS:
+    entity: "손해보험"
+    category: "Income Statement"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  I_BS:
+    entity: "손해보험"
+    category: "Balance Sheet"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Card -----
+  C_IS:
+    entity: "카드"
+    category: "Income Statement"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  C_BS:
+    entity: "카드"
+    category: "Balance Sheet"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  C_AQ:
+    entity: "카드"
+    category: "Asset Quality"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  # ----- Life Insurance -----
+  L_IS:
+    entity: "생명보험"
+    category: "Income Statement"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+  L_BS:
+    entity: "생명보험"
+    category: "Balance Sheet"
+    structure:
+      header_row: 7
+      data_start_row: 8
+      metric_columns: [7]
+      data_start_col: 8
+    default_unit: "KRW_billion"
+
+# =============================================================================
+# 제외할 시트
+# =============================================================================
+
+skip_sheets:
+  - "Home"
+  - "Disclaimer"
+  - "G_Structure"
+  - "G_Employees"
+  - "G_Credit Rating"
+  - "B_Credit Rating"
+  - "B_HPI"
+  - "S_Key"
+  - "I_Key"
+  - "I_Premium"
+  - "I_Ratios"
+  - "I_Monthly Premium"
+  - "C_Customers"
+  - "C_Delinquency"
+  - "L_Key"
+  - "L_Premium"
+  - "L_Ratios"
+  - "L_APE"
+  - "Other_IS"
+  - "Other_BS"
+  - "Contacts"
+
+# =============================================================================
+# 특수 처리 규칙
+# =============================================================================
+
+special_rules:
+  # KB는 3Q25(E) 같은 추정치 표시
+  estimate_marker: "(E)"
+  
+  # 날짜 형식이 두 가지 혼재
+  period_formats:
+    - pattern: "(\\d)Q(\\d{2})"      # 3Q24
+      output: "20{1}-Q{0}"
+    - pattern: "([A-Za-z]+)\\. (\\d{2})"  # Sep. 24
+      output: "20{1}-Q{month_to_quarter}"
+      
+  # 연간 컬럼 (2017.0, 2018.0 형태)
+  annual_column_pattern: "^\\d{4}\\.0$"
+  
+  calculated_columns:
+    - name: "QoQ"
+      skip: true
+    - name: "YoY"
+      skip: true
+      
+  empty_cell_handling: "skip"
