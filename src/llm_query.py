@@ -47,14 +47,26 @@ CREATE TABLE financial_metrics (
 - 하나금융지주 (하나)
 - 우리금융지주 (우리)
 
-## Rules
+## IMPORTANT Rules
 1. Default entity = '지주' unless asking about bank/card
 2. Use GROUP BY with MAX() to avoid duplicates
 3. For percent values, multiply by 100 for display
 4. Return ONLY the SQL query, no explanation
 5. Use Korean company names exactly as shown above
+6. **연도만 언급하고 분기를 안 말하면 → 해당 연도의 모든 분기(quarter IS NOT NULL) 데이터를 조회**
+7. **"비교"나 "순위"를 요청하면 → ORDER BY와 함께 모든 회사 조회**
+8. **현재 연도(2025)는 아직 진행 중이므로 → year=2025 AND quarter IS NOT NULL 사용**
 
 ## Examples
+
+Q: 2025년 4대 금융지주 순이익 비교
+```sql
+SELECT holding_company, period, MAX(value) as net_income_bn
+FROM financial_metrics
+WHERE metric_std = 'net_income' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
+GROUP BY holding_company, period
+ORDER BY holding_company, period;
+```
 
 Q: KB금융 2024년 3분기 순이익
 ```sql
@@ -67,7 +79,7 @@ Q: 4대 금융지주 총자산 비교
 ```sql
 SELECT holding_company, MAX(value) as total_assets_bn
 FROM financial_metrics
-WHERE metric_std IN ('total_assets', 'total_assets_excl_trust_asset') AND period = '2024-Q3' AND entity = '지주'
+WHERE metric_std IN ('total_assets', 'total_assets_excl_trust_asset') AND year = 2024 AND quarter = 3 AND entity = '지주'
 GROUP BY holding_company
 ORDER BY total_assets_bn DESC;
 ```
@@ -78,6 +90,15 @@ SELECT period, value * 100 as nim_pct
 FROM financial_metrics
 WHERE holding_company = '신한금융지주' AND metric_std = 'nim' AND entity = '은행' AND year >= 2023
 ORDER BY year, quarter;
+```
+
+Q: 2025년 3분기까지 KB금융 실적
+```sql
+SELECT period, metric_std, value
+FROM financial_metrics
+WHERE holding_company = 'KB금융지주' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
+AND metric_std IN ('net_income', 'total_assets', 'roe')
+ORDER BY quarter, metric_std;
 ```
 """
 
