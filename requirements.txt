@@ -11,6 +11,9 @@ numpy>=1.24.0
 # Database
 duckdb>=0.9.0
 
+# LLM
+requests>=2.31.0
+
 # YAML configuration
 pyyaml>=6.0
 
