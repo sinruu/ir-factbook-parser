@@ -102,7 +102,7 @@ class FinancialAssistant:
             f"{self.ollama_url}/api/generate",
             json={
                 "model": self.model,
-                "prompt": f"{SYSTEM_PROMPT}\n\nQ: {question}\n```sql",
+                "prompt": f"{SYSTEM_PROMPT}\n\nQ: {question}\nSQL:",
                 "stream": False,
                 "options": {
                     "temperature": 0.1,
@@ -116,26 +116,38 @@ class FinancialAssistant:
 
         result = response.json()["response"]
 
-        # SQL 추출 (```sql ... ``` 또는 그냥 SQL)
-        sql = result.strip()
-        if sql.startswith("```"):
-            sql = sql.split("```")[0]
-        if sql.endswith("```"):
-            sql = sql[:-3]
-        sql = sql.replace("```sql", "").replace("```", "").strip()
+        # 디버그 출력
+        # print(f"[DEBUG] Raw response: {result[:200]}...")
 
-        # SELECT로 시작하는지 확인
+        # SQL 추출
+        sql = result.strip()
+
+        # ```sql ... ``` 블록에서 추출
+        if "```sql" in sql:
+            sql = sql.split("```sql")[1].split("```")[0]
+        elif "```" in sql:
+            sql = sql.split("```")[1].split("```")[0] if sql.count("```") >= 2 else sql.split("```")[0]
+
+        sql = sql.strip()
+
+        # SELECT 문 찾기
         if not sql.upper().startswith("SELECT"):
             lines = sql.split("\n")
-            for line in lines:
+            for i, line in enumerate(lines):
                 if line.strip().upper().startswith("SELECT"):
-                    sql = line.strip()
+                    # SELECT부터 끝까지 합치기
+                    sql = "\n".join(lines[i:])
+                    # 세미콜론에서 자르기
+                    if ";" in sql:
+                        sql = sql.split(";")[0] + ";"
                     break
 
-        return sql
+        return sql.strip()
 
     def execute_query(self, sql: str):
         """SQL 실행"""
+        if not sql or not sql.strip():
+            return "Error: SQL이 생성되지 않았습니다"
         try:
             return self.conn.execute(sql).fetchdf()
         except Exception as e:
