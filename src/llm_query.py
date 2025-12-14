@@ -53,24 +53,24 @@ CREATE TABLE financial_metrics (
 3. For percent values, multiply by 100 for display
 4. Return ONLY the SQL query, no explanation
 5. Use Korean company names exactly as shown above
-6. **연도만 언급하고 분기를 안 말하면 → 해당 연도의 모든 분기 데이터 + 누적 합계를 함께 조회**
+6. **연도만 언급하고 분기를 안 말하면 → 해당 연도의 모든 분기 데이터를 조회**
 7. **"비교"나 "순위"를 요청하면 → ORDER BY와 함께 모든 회사 조회**
 8. **숫자는 ROUND(value, 1)로 소숫점 첫째 자리까지만 표시**
-9. **분기별 데이터와 연간 누적(SUM)을 함께 보여줄 때는 UNION ALL 사용**
+9. **분기별 값과 연간누적을 각각 다른 열(column)로 표시: quarterly(분기별), cumulative(누적)**
+10. **누적 계산은 SUM() OVER (PARTITION BY holding_company ORDER BY period) 윈도우 함수 사용**
 
 ## Examples
 
 Q: 2025년 4대 금융지주 순이익 비교
 ```sql
-SELECT holding_company, period, ROUND(MAX(value), 1) as net_income_bn
+SELECT
+    holding_company,
+    period,
+    ROUND(MAX(value), 1) as quarterly,
+    ROUND(SUM(MAX(value)) OVER (PARTITION BY holding_company ORDER BY period), 1) as cumulative
 FROM financial_metrics
 WHERE metric_std = 'net_income' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
 GROUP BY holding_company, period
-UNION ALL
-SELECT holding_company, '2025-누적' as period, ROUND(SUM(value), 1) as net_income_bn
-FROM financial_metrics
-WHERE metric_std = 'net_income' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
-GROUP BY holding_company
 ORDER BY holding_company, period;
 ```
 
@@ -100,14 +100,13 @@ ORDER BY year, quarter;
 
 Q: 2025년 KB금융 분기별 실적
 ```sql
-SELECT period, ROUND(MAX(value), 1) as net_income_bn
+SELECT
+    period,
+    ROUND(MAX(value), 1) as quarterly,
+    ROUND(SUM(MAX(value)) OVER (ORDER BY period), 1) as cumulative
 FROM financial_metrics
 WHERE holding_company = 'KB금융지주' AND metric_std = 'net_income' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
 GROUP BY period
-UNION ALL
-SELECT '2025-누적', ROUND(SUM(value), 1)
-FROM financial_metrics
-WHERE holding_company = 'KB금융지주' AND metric_std = 'net_income' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
 ORDER BY period;
 ```
 """
