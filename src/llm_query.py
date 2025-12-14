@@ -53,31 +53,37 @@ CREATE TABLE financial_metrics (
 3. For percent values, multiply by 100 for display
 4. Return ONLY the SQL query, no explanation
 5. Use Korean company names exactly as shown above
-6. **연도만 언급하고 분기를 안 말하면 → 해당 연도의 모든 분기(quarter IS NOT NULL) 데이터를 조회**
+6. **연도만 언급하고 분기를 안 말하면 → 해당 연도의 모든 분기 데이터 + 누적 합계를 함께 조회**
 7. **"비교"나 "순위"를 요청하면 → ORDER BY와 함께 모든 회사 조회**
-8. **현재 연도(2025)는 아직 진행 중이므로 → year=2025 AND quarter IS NOT NULL 사용**
+8. **숫자는 ROUND(value, 1)로 소숫점 첫째 자리까지만 표시**
+9. **분기별 데이터와 연간 누적(SUM)을 함께 보여줄 때는 UNION ALL 사용**
 
 ## Examples
 
 Q: 2025년 4대 금융지주 순이익 비교
 ```sql
-SELECT holding_company, period, MAX(value) as net_income_bn
+SELECT holding_company, period, ROUND(MAX(value), 1) as net_income_bn
 FROM financial_metrics
 WHERE metric_std = 'net_income' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
 GROUP BY holding_company, period
+UNION ALL
+SELECT holding_company, '2025-누적' as period, ROUND(SUM(value), 1) as net_income_bn
+FROM financial_metrics
+WHERE metric_std = 'net_income' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
+GROUP BY holding_company
 ORDER BY holding_company, period;
 ```
 
 Q: KB금융 2024년 3분기 순이익
 ```sql
-SELECT holding_company, period, value as net_income_bn
+SELECT holding_company, period, ROUND(value, 1) as net_income_bn
 FROM financial_metrics
 WHERE holding_company = 'KB금융지주' AND metric_std = 'net_income' AND period = '2024-Q3' AND entity = '지주';
 ```
 
 Q: 4대 금융지주 총자산 비교
 ```sql
-SELECT holding_company, MAX(value) as total_assets_bn
+SELECT holding_company, ROUND(MAX(value), 1) as total_assets_bn
 FROM financial_metrics
 WHERE metric_std IN ('total_assets', 'total_assets_excl_trust_asset') AND year = 2024 AND quarter = 3 AND entity = '지주'
 GROUP BY holding_company
@@ -86,19 +92,23 @@ ORDER BY total_assets_bn DESC;
 
 Q: 신한금융 NIM 추이
 ```sql
-SELECT period, value * 100 as nim_pct
+SELECT period, ROUND(value * 100, 1) as nim_pct
 FROM financial_metrics
 WHERE holding_company = '신한금융지주' AND metric_std = 'nim' AND entity = '은행' AND year >= 2023
 ORDER BY year, quarter;
 ```
 
-Q: 2025년 3분기까지 KB금융 실적
+Q: 2025년 KB금융 분기별 실적
 ```sql
-SELECT period, metric_std, value
+SELECT period, ROUND(MAX(value), 1) as net_income_bn
 FROM financial_metrics
-WHERE holding_company = 'KB금융지주' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
-AND metric_std IN ('net_income', 'total_assets', 'roe')
-ORDER BY quarter, metric_std;
+WHERE holding_company = 'KB금융지주' AND metric_std = 'net_income' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
+GROUP BY period
+UNION ALL
+SELECT '2025-누적', ROUND(SUM(value), 1)
+FROM financial_metrics
+WHERE holding_company = 'KB금융지주' AND metric_std = 'net_income' AND year = 2025 AND quarter IS NOT NULL AND entity = '지주'
+ORDER BY period;
 ```
 """
 
